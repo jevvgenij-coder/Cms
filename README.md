@@ -28,6 +28,26 @@ python run.py
 http://127.0.0.1:8000
 ```
 
+## Vercel Speed Insights
+
+Проект настроен для использования Vercel Speed Insights для мониторинга производительности веб-приложения.
+
+### Настройка Speed Insights
+
+1. Разверните проект на Vercel
+2. В панели управления Vercel перейдите в раздел **Speed Insights**
+3. Выберите ваш проект и нажмите кнопку **Enable**
+4. Переменная окружения `VERCEL_ANALYTICS_ID` будет автоматически добавлена при развертывании
+
+Speed Insights автоматически отслеживает:
+- First Input Delay (FID)
+- Largest Contentful Paint (LCP)
+- Cumulative Layout Shift (CLS)
+- Time to First Byte (TTFB)
+- First Contentful Paint (FCP)
+
+Метрики доступны в панели управления Vercel после развертывания и первых посещений пользователей.
+
 ## Облачный деплой
 
 - Build Command: `pip install -r requirements.txt`
