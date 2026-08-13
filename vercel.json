@@ -1,5 +1,12 @@
 {
   "installCommand": "pip install -r requirements.txt",
+  "includeFiles": [
+    "backend/**",
+    "templates/**",
+    "frontend/**",
+    "ADVANCED_TEST_REPORT.md",
+    "cms_v12.db"
+  ],
   "builds": [
     {
       "src": "api/index.py",
