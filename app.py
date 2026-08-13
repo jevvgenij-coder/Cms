@@ -192,7 +192,7 @@ def cmsc_price_in_currency(amount, currency):
     """Return the payment quote for CMSC, pegged 1:1 to EUR."""
     currency = (currency or 'EUR').upper()
     if currency not in CMSC_PAYMENT_CURRENCIES:
-        raise ValueError('Неподдерживаемая валюта оплаты.')
+        raise ValueError('Непод��ерживаемая валюта оплаты.')
     if not math.isfinite(amount) or amount <= 0:
         raise ValueError('Введите положительное количество CMSC.')
     if currency == 'EUR':
@@ -371,6 +371,7 @@ def inject_user():
         'user_email': session.get('user_email'),
         'is_admin': session.get('is_admin', False),
         'theme': session.get('theme', 'light'),
+        'vercel_analytics_id': os.getenv('VERCEL_ANALYTICS_ID'),
     }
 
 
