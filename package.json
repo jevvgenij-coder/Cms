@@ -1,0 +1,13 @@
+{
+  "name": "cms-uyn1",
+  "version": "1.0.0",
+  "description": "CMS Trading Bot with Vercel Speed Insights",
+  "private": true,
+  "scripts": {
+    "build": "echo 'Speed Insights configured'",
+    "postinstall": "echo 'Speed Insights package installed'"
+  },
+  "dependencies": {
+    "@vercel/speed-insights": "^1.0.0"
+  }
+}
