@@ -219,9 +219,13 @@ class PluginActionPayload(BaseModel):
     plugin_name: str
     duration_days: int = 15
 
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse(str(BASE_DIR / "frontend" / "favicon.ico"))
+
 @app.get("/", name="index")
 async def serve_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "user_id": request.session.get("user_email")})
+    return templates.TemplateResponse(request, "index.html", {"user_id": request.session.get("user_email")})
 
 @app.get("/home", name="home")
 async def home(request: Request):
@@ -229,7 +233,7 @@ async def home(request: Request):
 
 @app.get("/login", name="login")
 async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request, "message": None, "user_id": request.session.get("user_email")})
+    return templates.TemplateResponse(request, "login.html", {"message": None, "user_id": request.session.get("user_email")})
 
 @app.post("/login")
 async def login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
@@ -239,30 +243,30 @@ async def login_submit(request: Request, username: str = Form(...), password: st
         request.session["user_email"] = user.email
         request.session["is_admin"] = user.role == "admin"
         return RedirectResponse(url="/dashboard", status_code=302)
-    return templates.TemplateResponse("login.html", {"request": request, "message": "Неверный логин или пароль.", "user_id": None})
+    return templates.TemplateResponse(request, "login.html", {"message": "Неверный логин или пароль.", "user_id": None})
 
 @app.get("/register", name="register")
 async def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request, "message": None, "user_id": request.session.get("user_email")})
+    return templates.TemplateResponse(request, "register.html", {"message": None, "user_id": request.session.get("user_email")})
 
 @app.post("/register")
 async def register_submit(request: Request, username: str = Form(...), email: str = Form(...), password: str = Form(...), confirm_password: str = Form(...)):
     if password != confirm_password:
-        return templates.TemplateResponse("register.html", {"request": request, "message": "Пароли не совпадают.", "user_id": None})
+        return templates.TemplateResponse(request, "register.html", {"message": "Пароли не совпадают.", "user_id": None})
     try:
         user = engine.create_user(email, password)
         request.session["user_email"] = user.email
         return RedirectResponse(url="/dashboard", status_code=302)
     except Exception as e:
-        return templates.TemplateResponse("register.html", {"request": request, "message": f"Ошибка регистрации: {e}", "user_id": None})
+        return templates.TemplateResponse(request, "register.html", {"message": f"Ошибка регистрации: {e}", "user_id": None})
 
 @app.get("/forgot-password", name="forgot_password")
 async def forgot_password_page(request: Request):
-    return templates.TemplateResponse("forgot_password.html", {"request": request, "message": None, "user_id": request.session.get("user_email")})
+    return templates.TemplateResponse(request, "forgot_password.html", {"message": None, "user_id": request.session.get("user_email")})
 
 @app.post("/forgot-password")
 async def forgot_password_submit(request: Request, email: str = Form(...)):
-    return templates.TemplateResponse("forgot_password.html", {"request": request, "message": "Инструкции по восстановлению пароля отправлены на указанный email.", "user_id": request.session.get("user_email")})
+    return templates.TemplateResponse(request, "forgot_password.html", {"message": "Инструкции по восстановлению пароля отправлены на указанный email.", "user_id": request.session.get("user_email")})
 
 @app.api_route("/dashboard", methods=["GET", "POST"], name="dashboard")
 async def dashboard(request: Request):
@@ -279,9 +283,9 @@ async def dashboard(request: Request):
     username = user.email if user else user_email
     balance = "—"
     return templates.TemplateResponse(
+        request,
         "dashboard.html",
         {
-            "request": request,
             "username": username,
             "email": user_email,
             "balance": balance,
@@ -324,9 +328,9 @@ async def marketplace(request: Request):
             except (TypeError, ValueError) as exc:
                 plugin_message = str(exc)
     return templates.TemplateResponse(
+        request,
         "marketplace.html",
         {
-            "request": request,
             "user_id": user_email,
             "wallet": {"balance": 0.0, "credits": 0.0},
             "internal_currency": "CMS Credits (CMSC)",
@@ -346,9 +350,9 @@ async def bot_management(request: Request):
     if not user_email:
         return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse(
+        request,
         "bot_management.html",
         {
-            "request": request,
             "user_id": user_email,
             "bot_status": bot.status(),
             "current_strategy": strategy_manager.current_strategy(),
@@ -366,9 +370,9 @@ async def wallet_page(request: Request):
     if not user_email:
         return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse(
+        request,
         "wallet.html",
         {
-            "request": request,
             "user_id": user_email,
             "wallet": {"balance": 0.0, "credits": 0.0},
             "internal_currency": "CMS Credits (CMSC)",
@@ -383,9 +387,9 @@ async def admin_panel(request: Request):
     except HTTPException:
         return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse(
+        request,
         "admin.html",
         {
-            "request": request,
             "user_id": user_email,
             "users": [],
             "plugins": engine.list_plugins(),
@@ -402,6 +406,31 @@ async def admin_risk_action(request: Request, enabled: str = Form("true")):
     risk_manager.set_kill_switch(enabled.lower() == "true")
     engine.record_audit("kill_switch", enabled, email)
     return RedirectResponse(url="/admin", status_code=303)
+
+@app.api_route("/settings", methods=["GET", "POST"], name="settings")
+async def settings(request: Request):
+    user_email = request.session.get("user_email")
+    if not user_email:
+        return RedirectResponse(url="/login", status_code=302)
+    message = None
+    if request.method == "POST":
+        form = await request.form()
+        if form.get("theme") in {"light", "dark"}:
+            request.session["theme"] = form["theme"]
+            message = "Настройки сохранены."
+    user = engine.get_user(user_email)
+    username = user.email if user else user_email
+    return templates.TemplateResponse(
+        request,
+        "settings.html",
+        {
+            "username": username,
+            "email": user_email,
+            "user_id": user_email,
+            "selected_theme": request.session.get("theme", "light"),
+            "message": message,
+        },
+    )
 
 @app.get("/logout", name="logout")
 async def logout(request: Request):
