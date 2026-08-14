@@ -376,6 +376,21 @@ async def wallet_page(request: Request):
         },
     )
 
+@app.get("/settings", name="settings")
+async def settings_page(request: Request):
+    user_email = request.session.get("user_email")
+    if not user_email:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "user_id": user_email,
+            "theme": request.session.get("theme", "light"),
+            "message": None,
+        },
+    )
+
 @app.get("/admin", name="admin_panel")
 async def admin_panel(request: Request):
     try:
