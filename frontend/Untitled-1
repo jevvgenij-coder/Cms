@@ -1,0 +1,1 @@
+cd /workspaces/Cms && .venv/bin/python run.py
